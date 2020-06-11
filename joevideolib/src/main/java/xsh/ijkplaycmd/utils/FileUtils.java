@@ -1,4 +1,4 @@
-package Jni;
+package xsh.ijkplaycmd.utils;
 
 import android.util.Log;
 

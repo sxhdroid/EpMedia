@@ -68,7 +68,7 @@ void ffmpeg_progress(float progress) {
  */
 JNIEXPORT jint
 
-JNICALL Java_Jni_FFmpegCmd_exec
+JNICALL Java_xsh_ijkplaycmd_api_FFmpegCmd_exec
         (JNIEnv *env, jclass clazz, jint cmdnum, jobjectArray cmdline) {
     //---------------------------------C语言 反射Java 相关----------------------------------------
     //在jni的c线程中不允许使用共用的env环境变量 但JavaVM在整个jvm中是共用的 可通过保存JavaVM指针,到时候再通过JavaVM指针取出JNIEnv *env;
@@ -106,7 +106,7 @@ JNICALL Java_Jni_FFmpegCmd_exec
 /*
 JNIEXPORT void
 
-JNICALL Java_Jni_FFmpegCmd_exit
+JNICALL Java_xsh_ijkplaycmd_api_FFmpegCmd_exit
         (JNIEnv *env, jclass clazz) {
     (*env)->GetJavaVM(env, &jvm);
     m_clazz = (*env)->NewGlobalRef(env, clazz);

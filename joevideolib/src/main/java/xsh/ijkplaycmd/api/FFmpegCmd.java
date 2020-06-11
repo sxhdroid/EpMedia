@@ -1,13 +1,10 @@
-package Jni;
+package xsh.ijkplaycmd.api;
 
 import android.support.annotation.Keep;
-
-import VideoHandle.OnEditorListener;
 
 /**
  * Created by 杨杰 on 2017/2/14.
  */
-
 @Keep
 public class FFmpegCmd {
 	/**

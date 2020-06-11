@@ -1,4 +1,4 @@
-package VideoHandle;
+package xsh.ijkplaycmd.core;
 
 /**
  * Created by Administrator on 2017/11/8.

@@ -1,4 +1,4 @@
-package VideoHandle;
+package xsh.ijkplaycmd.core;
 
 /**
  * 添加特效类

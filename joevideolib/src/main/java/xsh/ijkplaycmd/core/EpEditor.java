@@ -1,4 +1,4 @@
-package VideoHandle;
+package xsh.ijkplaycmd.core;
 
 import android.content.Context;
 import android.media.MediaExtractor;
@@ -9,10 +9,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import Jni.FFmpegCmd;
-import Jni.FileUtils;
-import Jni.TrackUtils;
-import Jni.VideoUitls;
+import xsh.ijkplaycmd.api.FFmpegCmd;
+import xsh.ijkplaycmd.utils.FileUtils;
+import xsh.ijkplaycmd.utils.TrackUtils;
+import xsh.ijkplaycmd.utils.VideoUitls;
+import xsh.ijkplaycmd.api.OnEditorListener;
 
 /**
  * 视频编辑器
@@ -30,9 +31,6 @@ public class EpEditor {
 
 	public enum PTS {
 		VIDEO, AUDIO, ALL
-	}
-
-	private EpEditor() {
 	}
 
 	/**
@@ -139,7 +137,7 @@ public class EpEditor {
 	 * @param epVideos     需要合并的视频集合
 	 * @param outputOption 输出选项配置
 	 */
-	public static void merge(List<EpVideo> epVideos, OutputOption outputOption, OnEditorListener onEditorListener) {
+	public static void merge(List<? extends EpVideo> epVideos, OutputOption outputOption, OnEditorListener onEditorListener) {
 		//检测是否有无音轨视频
 		boolean isNoAudioTrack = false;
 		for (EpVideo epVideo : epVideos) {
@@ -177,7 +175,9 @@ public class EpEditor {
 				ArrayList<EpDraw> epDraws = e.getEpDraws();
 				if (epDraws.size() > 0) {
 					for (EpDraw ep : epDraws) {
-						if (ep.isAnimation()) cmd.append("-ignore_loop").append(0);
+						if (ep.isAnimation()) {
+							cmd.append("-ignore_loop").append(0);
+						}
 						cmd.append("-i").append(ep.getPicPath());
 					}
 				}
@@ -264,7 +264,7 @@ public class EpEditor {
 	 * @param outputOption     输出选项
 	 * @param onEditorListener 回调监听
 	 */
-	public static void mergeByLc(Context context, List<EpVideo> epVideos, OutputOption outputOption, final OnEditorListener onEditorListener) {
+	public static void mergeByLc(Context context, List<? extends EpVideo> epVideos, OutputOption outputOption, final OnEditorListener onEditorListener) {
 		String appDir = context.getFilesDir().getAbsolutePath() + "/EpVideos/";
 		String fileName = "ffmpeg_concat.txt";
 		List<String> videos = new ArrayList<>();

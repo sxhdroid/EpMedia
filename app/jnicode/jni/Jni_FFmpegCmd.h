@@ -12,10 +12,10 @@ extern "C" {
  * Method:    exec
  * Signature: (I[Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_Jni_FFmpegCmd_exec
+JNIEXPORT jint JNICALL Java_xsh_ijkplaycmd_api_FFmpegCmd_exec
   (JNIEnv *, jclass, jint, jobjectArray);
 
-JNIEXPORT void JNICALL Java_Jni_FFmpegCmd_exit
+JNIEXPORT void JNICALL Java_xsh_ijkplaycmd_api_FFmpegCmd_exit
   (JNIEnv *, jclass);
 
 #ifdef __cplusplus
