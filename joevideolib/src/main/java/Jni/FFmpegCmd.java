@@ -14,14 +14,7 @@ public class FFmpegCmd {
 	 * 加载所有相关链接库
 	 */
 	static {
-		System.loadLibrary("avutil");
-		System.loadLibrary("avcodec");
-		System.loadLibrary("swresample");
-		System.loadLibrary("avformat");
-		System.loadLibrary("swscale");
-		System.loadLibrary("avfilter");
-		System.loadLibrary("avdevice");
-		System.loadLibrary("ffmpeg");
+		System.loadLibrary("ffmpegCmd");
 	}
 
 	private static OnEditorListener listener;

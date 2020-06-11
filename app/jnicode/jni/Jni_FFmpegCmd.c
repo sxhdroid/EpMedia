@@ -103,9 +103,9 @@ JNICALL Java_Jni_FFmpegCmd_exec
     return 0;
 }
 
+/*
 JNIEXPORT void
 
-/*
 JNICALL Java_Jni_FFmpegCmd_exit
         (JNIEnv *env, jclass clazz) {
     (*env)->GetJavaVM(env, &jvm);
