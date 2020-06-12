@@ -24,3 +24,4 @@
 #保留注解，如果不添加改行会导致我们的@Keep注解失效
 -keepattributes *Annotation*
 -keep @android.support.annotation.Keep class **
+-keep class xsh.ijkplaycmd.widget.** { *; }
