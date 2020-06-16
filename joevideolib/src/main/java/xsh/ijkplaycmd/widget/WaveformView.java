@@ -128,11 +128,12 @@ public class WaveformView extends View {
         mUnselectedBkgndLinePaint.setColor(res.getColor(R.color.waveform_unselected_bkgnd_overlay));
         mBorderLinePaint = new Paint();
         mBorderLinePaint.setAntiAlias(true);
-        mBorderLinePaint.setStrokeWidth(1.5f);
+        mBorderLinePaint.setStrokeWidth(3f);
         mBorderLinePaint.setPathEffect(new DashPathEffect(new float[] { 3.0f, 2.0f }, 0.0f));
         mBorderLinePaint.setColor(res.getColor(R.color.selection_border));
         mPlaybackLinePaint = new Paint();
         mPlaybackLinePaint.setAntiAlias(false);
+        mPlaybackLinePaint.setStrokeWidth(5f);
         mPlaybackLinePaint.setColor(res.getColor(R.color.playback_indicator));
         mTimecodePaint = new Paint();
         mTimecodePaint.setTextSize(13);
