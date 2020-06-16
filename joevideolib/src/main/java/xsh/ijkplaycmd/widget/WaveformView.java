@@ -22,7 +22,6 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.DashPathEffect;
 import android.graphics.Paint;
-import android.support.annotation.Keep;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -48,7 +47,6 @@ import xsh.ijkplaycmd.api.R;
  * WaveformView doesn't actually handle selection, but it will just display
  * the selected part of the waveform in a different color.
  */
-@Keep
 public class WaveformView extends View {
 
     public interface WaveformListener {
@@ -66,6 +64,8 @@ public class WaveformView extends View {
 
         void waveformZoomOut();
     }
+
+    private static int cutTime = 1;
 
     // Colors
     private Paint mGridPaint;
@@ -135,7 +135,7 @@ public class WaveformView extends View {
         mPlaybackLinePaint.setAntiAlias(false);
         mPlaybackLinePaint.setColor(res.getColor(R.color.playback_indicator));
         mTimecodePaint = new Paint();
-        mTimecodePaint.setTextSize(12);
+        mTimecodePaint.setTextSize(13);
         mTimecodePaint.setAntiAlias(true);
         mTimecodePaint.setColor(res.getColor(R.color.timecode));
         mTimecodePaint.setShadowLayer(2, 1, 1, res.getColor(R.color.timecode_shadow));
@@ -199,16 +199,18 @@ public class WaveformView extends View {
             return true;
         }
 
-        switch(event.getAction()) {
-        case MotionEvent.ACTION_DOWN:
-            mListener.waveformTouchStart(event.getX());
-            break;
-        case MotionEvent.ACTION_MOVE:
-            mListener.waveformTouchMove(event.getX());
-            break;
-        case MotionEvent.ACTION_UP:
-            mListener.waveformTouchEnd();
-            break;
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                mListener.waveformTouchStart(event.getX());
+                break;
+            case MotionEvent.ACTION_MOVE:
+                mListener.waveformTouchMove(event.getX());
+                break;
+            case MotionEvent.ACTION_UP:
+                mListener.waveformTouchEnd();
+                break;
+            default:
+                break;
         }
         return true;
     }
@@ -351,7 +353,7 @@ public class WaveformView extends View {
     public void recomputeHeights(float density) {
         mHeightsAtThisZoomLevel = null;
         mDensity = density;
-        mTimecodePaint.setTextSize((int)(12 * density));
+        mTimecodePaint.setTextSize((int)(13 * density));
 
         invalidate();
     }
@@ -362,10 +364,70 @@ public class WaveformView extends View {
         canvas.drawLine(x, y0, x, y1, paint);
     }
 
-    private static int cutTime = 1;
-
-    public int getCutTime() {
-        return cutTime;
+    /**
+     * 绘制所有帧缩略图
+     * @param canvas 画布
+     */
+    private void
+    drawFrameAtTime(Canvas canvas, int width) {
+        double onePixelInSecs = pixelsToSeconds(1);
+        double fractionalSecs = mOffset * onePixelInSecs;
+        int integerSecs = (int) fractionalSecs;
+        int i = 0;
+        int s = 0;
+        while (i < width) {
+            i++;
+            fractionalSecs += onePixelInSecs;
+            int integerSecsNew = (int) fractionalSecs;
+            // 绘制时间刻度
+            if (integerSecsNew != integerSecs) {
+                integerSecs = integerSecsNew;
+                int c = integerSecs % cutTime;
+                if(c == 0){
+                    if(imageWidth == 0){
+                        if(integerSecs / cutTime == 1){
+                            imageWidth = i;
+                        }
+                    }
+                    imageHeight = imageWidth;
+//                    if(imageHeight == 0){
+//                        imageHeight = getMeasuredHeight() - 10 - (int) (12 * mDensity + 5);
+//                    }
+                }
+                // Turn, e.g. 67 seconds into "1:07"
+                String timecodeMinutes = "" + (integerSecs / 60);
+                String timecodeSeconds = "" + (integerSecs % 60);
+                if ((integerSecs % 60) < 10) {
+                    timecodeSeconds = "0" + timecodeSeconds;
+                }
+                String timecodeStr = timecodeMinutes + ":" + timecodeSeconds;
+                float offset = (float) (0.5 * mTimecodePaint.measureText(timecodeStr));
+                canvas.drawText(timecodeStr, i - offset, (int)(12 * mDensity), mTimecodePaint);
+            }
+            if(bitmaps != null && s < bitmaps.size()) {
+                if(i >= s * imageWidth){
+                    Bitmap bitmap = bitmaps.get(s);
+                    canvas.drawBitmap(bitmap,i - mOffset, getMeasuredHeight() * 0.5f - imageHeight * 0.5f, mSelectedLinePaint);
+                    s++;
+                }
+            }
+        }
+        if(imageWidth == 0){
+            imageWidth = width;
+            imageHeight = getMeasuredHeight() - 10 - (int) (12 * mDensity+5);
+        }
+        // 绘制超出屏幕之外的预览图
+        if(bitmaps != null){
+            int m = i + mOffset;
+            while (i < m && s < bitmaps.size()){
+                i++;
+                if(i >= s * imageWidth){
+                    Bitmap bitmap = bitmaps.get(s);
+                    canvas.drawBitmap(bitmap,i - mOffset,getMeasuredHeight() * 0.5f - imageHeight * 0.5f, mSelectedLinePaint);
+                    s++;
+                }
+            }
+        }
     }
 
     @Override
@@ -390,62 +452,11 @@ public class WaveformView extends View {
             width = measuredWidth;
         }
 
-        // Draw grid
-        double onePixelInSecs = pixelsToSeconds(1);
-        boolean onlyEveryFiveSecs = (onePixelInSecs > 1.0 / 50.0);
-        double fractionalSecs = mOffset * onePixelInSecs;
-        int integerSecs = (int) fractionalSecs;
-        int i = 0;
-        int s = 0;
-        int l = -1;
-        while (i < width) {
-            i++;
-            fractionalSecs += onePixelInSecs;
-            int integerSecsNew = (int) fractionalSecs;
-            if (integerSecsNew != integerSecs) {
-                integerSecs = integerSecsNew;
-                // 绘制网格线
-//                if (!onlyEveryFiveSecs || 0 == (integerSecs % 5)) {
-//                    canvas.drawLine(i, 0, i, measuredHeight, mGridPaint);
-//                }
-                int c = integerSecs%cutTime;
-                if(c == 0){
-                    if(imageWidth == 0){
-                        if(integerSecs/cutTime == 1){
-                            imageWidth = i;
-                        }
-                    }
-                    if(imageHeight == 0){
-                        imageHeight = getMeasuredHeight() - 10 - (int) (12 * mDensity+5);
-                    }
-                }
-            }
-            if(bitmaps != null && s < bitmaps.size()){
-                if(i >= s*imageWidth){
-                    Bitmap bitmap = bitmaps.get(s);
-                    canvas.drawBitmap(bitmap,i-mOffset,12 * mDensity+5,mSelectedLinePaint);
-                    s++;
-                }
-            }
-        }
-        if(imageWidth == 0){
-            imageWidth = width;
-            imageHeight = getMeasuredHeight() - 10 - (int) (12 * mDensity+5);
-        }
-        if(bitmaps != null){
-            int m = i+mOffset;
-            while (i < m && s < bitmaps.size()){
-                i++;
-                if(i >= s*imageWidth){
-                    Bitmap bitmap = bitmaps.get(s);
-                    canvas.drawBitmap(bitmap,i-mOffset,12 * mDensity+5,mSelectedLinePaint);
-                    s++;
-                }
-            }
-        }
+        // 绘制预览帧图片
+        drawFrameAtTime(canvas, width);
 
-        // Draw waveform
-        for (i = 0; i < width; i++) {
+        // 绘制未选中及播放反馈线
+        for (int i = 0; i < width; i++) {
             Paint paint;
             if (i + start >= mSelectionStart &&
                 i + start < mSelectionEnd) {
@@ -456,12 +467,7 @@ public class WaveformView extends View {
                 paint = mUnselectedLinePaint;
             }
 
-//            drawWaveformLine(
-//                canvas, i,
-//                ctr - mHeightsAtThisZoomLevel[start + i],
-//                ctr + 1 + mHeightsAtThisZoomLevel[start + i],
-//                paint);
-
+            // 绘制播放位置反馈线
             if (i + start == mPlaybackPos) {
                 canvas.drawLine(i, 0, i, measuredHeight, mPlaybackLinePaint);
             }
@@ -469,12 +475,12 @@ public class WaveformView extends View {
 
         // If we can see the right edge of the waveform, draw the
         // non-waveform area to the right as unselected
-        for (i = width; i < measuredWidth; i++) {
+        for (int i = width; i < measuredWidth; i++) {
             drawWaveformLine(canvas, i, 0, measuredHeight,
                              mUnselectedBkgndLinePaint);
         }
 
-        // Draw borders
+        // Draw borders 绘制选中区域边框
         canvas.drawLine(
             mSelectionStart - mOffset + 0.5f, 30,
             mSelectionStart - mOffset + 0.5f, measuredHeight,
@@ -483,47 +489,6 @@ public class WaveformView extends View {
             mSelectionEnd - mOffset + 0.5f, 0,
             mSelectionEnd - mOffset + 0.5f, measuredHeight - 30,
             mBorderLinePaint);
-
-        // Draw timecode
-        double timecodeIntervalSecs = 1.0;
-        if (timecodeIntervalSecs / onePixelInSecs < 50) {
-            timecodeIntervalSecs = 5.0;
-        }
-        if (timecodeIntervalSecs / onePixelInSecs < 50) {
-            timecodeIntervalSecs = 15.0;
-        }
-
-        // Draw grid
-        fractionalSecs = mOffset * onePixelInSecs;
-        int integerTimecode = (int) (fractionalSecs / timecodeIntervalSecs);
-        i = 0;
-        while (i <= width) {
-            i++;
-            fractionalSecs += onePixelInSecs;
-            integerSecs = (int) fractionalSecs;
-
-            int integerTimecodeNew = (int) (fractionalSecs /
-                                            timecodeIntervalSecs);
-            if (integerTimecodeNew != integerTimecode) {
-                integerTimecode = integerTimecodeNew;
-
-                // Turn, e.g. 67 seconds into "1:07"
-                String timecodeMinutes = "" + (integerSecs / 60);
-                String timecodeSeconds = "" + (integerSecs % 60);
-                if ((integerSecs % 60) < 10) {
-                    timecodeSeconds = "0" + timecodeSeconds;
-                }
-                String timecodeStr = timecodeMinutes + ":" + timecodeSeconds;
-                float offset = (float) (
-                    0.5 * mTimecodePaint.measureText(timecodeStr));
-                canvas.drawText(timecodeStr,
-                                i - offset,
-                                (int)(12 * mDensity),
-                                mTimecodePaint);
-
-
-            }
-        }
 
         if (mListener != null) {
             mListener.waveformDraw();
@@ -581,5 +546,9 @@ public class WaveformView extends View {
             mHeightsAtThisZoomLevel[i] =
                 (int)(mValuesByZoomLevel[mZoomLevel][i] * halfHeight);
         }
+    }
+
+    public int getCutTime() {
+        return cutTime;
     }
 }
