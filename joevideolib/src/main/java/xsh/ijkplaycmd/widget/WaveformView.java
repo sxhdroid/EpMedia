@@ -483,12 +483,12 @@ public class WaveformView extends View {
 
         // Draw borders 绘制选中区域边框
         canvas.drawLine(
-            mSelectionStart - mOffset + 0.5f, 30,
+            mSelectionStart - mOffset + 0.5f, 0,
             mSelectionStart - mOffset + 0.5f, measuredHeight,
             mBorderLinePaint);
         canvas.drawLine(
             mSelectionEnd - mOffset + 0.5f, 0,
-            mSelectionEnd - mOffset + 0.5f, measuredHeight - 30,
+            mSelectionEnd - mOffset + 0.5f, measuredHeight,
             mBorderLinePaint);
 
         if (mListener != null) {
