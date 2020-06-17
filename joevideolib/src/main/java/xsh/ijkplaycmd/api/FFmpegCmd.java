@@ -15,7 +15,9 @@ public class FFmpegCmd {
 	}
 
 	private static OnEditorListener listener;
-	private static long duration;
+	/** 单位为秒 */
+	private static int duration;
+	private static boolean isFirstUpdateProgress;
 
 	/**
 	 * 调用底层执行
@@ -46,7 +48,12 @@ public class FFmpegCmd {
 	public static void onProgress(float progress) {
 		if (listener != null) {
 			if (duration != 0) {
-				listener.onProgress(progress / (duration / 1000000) * 0.95f);
+				if (isFirstUpdateProgress) {
+					isFirstUpdateProgress = false;
+					listener.onProgress(0);
+				} else {
+					listener.onProgress(progress / duration * 0.95f);
+				}
 			}
 		}
 	}
@@ -56,12 +63,14 @@ public class FFmpegCmd {
 	 * 执行ffmoeg命令
 	 *
 	 * @param cmds
+	 * @param duration 持续时间， 单位为微秒
 	 * @param listener
 	 */
 	@Keep
 	public static void exec(String[] cmds, long duration, OnEditorListener listener) {
 		FFmpegCmd.listener = listener;
-		FFmpegCmd.duration = duration;
+		FFmpegCmd.duration = (int) (duration / 1000000);
 		exec(cmds.length, cmds);
+		isFirstUpdateProgress = true;
 	}
 }
