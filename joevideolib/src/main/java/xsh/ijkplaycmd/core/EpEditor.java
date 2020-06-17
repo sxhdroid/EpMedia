@@ -633,21 +633,6 @@ public class EpEditor {
 			cmdLog += cmds;
 		}
 		Log.v("EpMediaF", "cmd:" + cmdLog);
-		FFmpegCmd.exec(cmds, duration, new OnEditorListener() {
-			@Override
-			public void onSuccess() {
-				onEditorListener.onSuccess();
-			}
-
-			@Override
-			public void onFailure() {
-				onEditorListener.onFailure();
-			}
-
-			@Override
-			public void onProgress(final float progress) {
-				onEditorListener.onProgress(progress);
-			}
-		});
+		FFmpegCmd.exec(cmds, duration, onEditorListener);
 	}
 }
