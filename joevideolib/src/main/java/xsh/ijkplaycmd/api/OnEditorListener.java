@@ -12,7 +12,7 @@ import android.support.annotation.Keep;
 @Keep
 public interface OnEditorListener {
 
-	void onSuccess();
+	void onSuccess(int duration);
 
 	void onFailure();
 

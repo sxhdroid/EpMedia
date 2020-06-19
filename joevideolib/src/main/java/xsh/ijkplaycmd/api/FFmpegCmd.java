@@ -37,7 +37,7 @@ public class FFmpegCmd {
 		if (listener != null) {
 			if (ret == 0) {
 				listener.onProgress(1);
-				listener.onSuccess();
+				listener.onSuccess(duration);
 			} else {
 				listener.onFailure();
 			}
